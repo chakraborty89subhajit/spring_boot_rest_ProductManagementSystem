@@ -1,13 +1,19 @@
 package com.example.ProductManagementSystem.service.serviceImpl;
 
 import com.example.ProductManagementSystem.dto.ProductDto;
+import com.example.ProductManagementSystem.dto.ProductResponse;
 import com.example.ProductManagementSystem.model.Product;
 import com.example.ProductManagementSystem.repo.ProductRepo;
 import com.example.ProductManagementSystem.service.ProductService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
+
 
 import java.util.List;
 import java.util.Optional;
@@ -98,5 +104,51 @@ public class ProductSrviceImpl implements ProductService {
   return true;
         }
         return false;
+    }
+
+    @Override
+    public ProductResponse getProductsWithPagination(int pageNO,
+                                                     int pageSize,
+                                                     String sortBy,
+                                                     String sortDir) {
+
+        //implementing sorting logic
+        Sort sort = sortDir.equalsIgnoreCase("asc") ?
+                Sort.by(sortBy).ascending() :
+                Sort.by(sortBy).descending();
+
+        //only for pagination
+       // Pageable pageable= PageRequest.of(pageNO,pageSize);
+
+        //for pagination and sorting
+        Pageable pageable= PageRequest.of(pageNO,pageSize,sort);
+
+        Page<Product> page= productRepo.findAll(pageable);
+        long totalElements = page.getTotalElements();
+        int totalPages= page.getTotalPages();
+        List<Product> products =page.getContent();
+        boolean first= page.isFirst();
+        boolean last= page.isLast();
+
+
+
+
+
+        List<ProductDto> productDtos = products
+                .stream()
+                .map(prod->mapper.map(prod,ProductDto.class))
+                        .collect(Collectors.toList());
+                ProductResponse productResponse =ProductResponse
+                        .builder()
+                        .products(productDtos)
+                        .totalElements(totalElements)
+                        .totalPages(totalPages)
+                        .isFirst(first)
+                        .isLast(last)
+                        .pageNo(pageNO)
+                        .pageSize(pageSize)
+                        .build();
+
+         return productResponse;
     }
 }

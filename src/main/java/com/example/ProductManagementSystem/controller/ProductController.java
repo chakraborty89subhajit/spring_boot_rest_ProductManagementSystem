@@ -1,6 +1,7 @@
 package com.example.ProductManagementSystem.controller;
 
 import com.example.ProductManagementSystem.dto.ProductDto;
+import com.example.ProductManagementSystem.dto.ProductResponse;
 import com.example.ProductManagementSystem.model.Product;
 import com.example.ProductManagementSystem.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -81,6 +82,31 @@ public class ProductController {
         return new ResponseEntity<>(e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR);
     }
     return new ResponseEntity<>("product delete successfully",HttpStatus.OK);
+        }
+
+
+
+        @GetMapping("/page-products")
+        public ResponseEntity<?> getProductsPagenate(
+                @RequestParam(name="pageno", defaultValue = "0") int pageNo,
+                @RequestParam(name="pagesize", defaultValue = "2") int pageSize,
+                @RequestParam(name="sortby", defaultValue = "id") String sortBy,
+                @RequestParam(name="sortdir", defaultValue = "asc") String sortDir
+
+        ){
+            ProductResponse productResponse = null;
+            try{
+                productResponse= productService.getProductsWithPagination(pageNo,
+                        pageSize,
+                        sortBy,
+                        sortDir);
+                if(ObjectUtils.isEmpty(productResponse)){
+                    return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+                }
+            }catch(Exception e){
+                return new ResponseEntity<>(e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+            return new ResponseEntity<>(productResponse,HttpStatus.OK);
         }
 
     }
