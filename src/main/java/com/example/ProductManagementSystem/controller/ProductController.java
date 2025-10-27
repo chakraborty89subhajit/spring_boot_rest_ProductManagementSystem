@@ -95,6 +95,8 @@ public class ProductController {
 
         ){
             ProductResponse productResponse = null;
+            String name= null;
+            name.toUpperCase();
             try{
                 productResponse= productService.getProductsWithPagination(pageNo,
                         pageSize,
