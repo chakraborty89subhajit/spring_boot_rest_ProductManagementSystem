@@ -2,6 +2,7 @@ package com.example.ProductManagementSystem.controller;
 
 import com.example.ProductManagementSystem.dto.ProductDto;
 import com.example.ProductManagementSystem.dto.ProductResponse;
+import com.example.ProductManagementSystem.exception.BadRequestException;
 import com.example.ProductManagementSystem.model.Product;
 import com.example.ProductManagementSystem.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,12 +22,19 @@ public class ProductController {
 @PostMapping("/save-product")
     public ResponseEntity<?> saveProduct(@RequestBody ProductDto productDto) {
     try {
+        validationProduct(productDto);
         Boolean saveProduct = productService.saveProduct(productDto);
 
         if (!saveProduct) {
-            return new ResponseEntity<>("product not saved", HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>("product not saved",
+                    HttpStatus.INTERNAL_SERVER_ERROR);
         }
-    }catch(Exception e){
+    }
+    catch(BadRequestException e){
+        return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+
+    }
+    catch(Exception e){
         return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
     return new ResponseEntity<>("product saves successfully",HttpStatus.CREATED);
@@ -34,7 +42,32 @@ public class ProductController {
         }
 
 
-        @GetMapping("/products")
+
+    private void validationProduct(ProductDto productDto) {
+
+        //  Validate name
+        if (productDto.getName() == null || productDto.getName().trim().isEmpty()) {
+            throw new BadRequestException("Name field is empty or null");
+        }
+
+        //  Validate description
+        if (productDto.getDescription() == null ||
+                productDto.getDescription().trim().isEmpty()) {
+            throw new BadRequestException("Description field is empty or null");
+        }
+
+        //  Description length validation
+        int descLength = productDto.getDescription().trim().length();
+        if (descLength < 3 || descLength > 10) {
+            throw new BadRequestException
+                    ("Description length must be between 3 and 10 characters");
+        }
+    }
+
+
+
+
+    @GetMapping("/products")
         public ResponseEntity<?> getproducts(){
     List<ProductDto> allProducts= null;
     try{
